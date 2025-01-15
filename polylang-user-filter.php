@@ -67,10 +67,14 @@ function puf_save_user_languages($user_id)
 add_action('personal_options_update', 'puf_save_user_languages');
 add_action('edit_user_profile_update', 'puf_save_user_languages');
 
+function puf_is_site_admin(){
+    return in_array('administrator',  wp_get_current_user()->roles);
+}
+
 // Filter posts and pages by user's languages in the admin area
 function puf_filter_content_by_language($query)
 {
-    if (is_admin() && $query->is_main_query() && (isset($query->query['post_type']) && in_array($query->query['post_type'], array('post', 'page')))) {
+    if (!puf_is_site_admin() && $query->is_main_query() && (isset($query->query['post_type']) && in_array($query->query['post_type'], array('post', 'page')))) {
         $current_user = wp_get_current_user();
         $user_languages = get_user_meta($current_user->ID, 'user_languages', true);
 
