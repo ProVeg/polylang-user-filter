@@ -35,7 +35,7 @@ function puf_add_languages_field($user)
                 <select id="user_languages" name="user_languages[]" multiple="multiple" style="width: 100%;">
                     <?php foreach ($languages as $language): ?>
                         <option value="<?php echo esc_attr($language); ?>" <?php echo (is_array($user_languages) && in_array($language, $user_languages)) ? 'selected="selected"' : ''; ?>>
-                            <?php echo esc_html(pll_get_language_name($language)); ?>
+                            <?php echo esc_html($language); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -74,19 +74,16 @@ function puf_is_site_admin(){
 // Filter posts and pages by user's languages in the admin area
 function puf_filter_content_by_language($query)
 {
-    if (!puf_is_site_admin() && $query->is_main_query() && (isset($query->query['post_type']) && in_array($query->query['post_type'], array('post', 'page')))) {
-        $current_user = wp_get_current_user();
-        $user_languages = get_user_meta($current_user->ID, 'user_languages', true);
-
-        if (!empty($user_languages) && is_array($user_languages)) {
-            $tax_query = $query->get('tax_query') ?: array();
-            $tax_query[] = array(
-                'taxonomy' => 'language',
-                'field'    => 'slug',
-                'terms'    => $user_languages,
-            );
-            $query->set('tax_query', $tax_query);
-        }
+    $current_user = wp_get_current_user();
+    $user_languages = get_user_meta($current_user->ID, 'user_languages', true);
+    if (is_admin() && !empty($user_languages) && is_array($user_languages) && $query->is_main_query() && (isset($query->query['post_type']) && in_array($query->query['post_type'], array('post', 'page')))) {
+        $tax_query = $query->get('tax_query') ?: array();
+        $tax_query[] = array(
+            'taxonomy' => 'language',
+            'field'    => 'slug',
+            'terms'    => $user_languages,
+        );
+        $query->set('tax_query', $tax_query);
     }
 }
 
