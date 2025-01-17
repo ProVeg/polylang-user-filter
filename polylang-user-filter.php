@@ -11,6 +11,33 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Add custom Country Editor role
+function puf_add_country_editor_role()
+{
+    $role = get_role('translator');
+    if ($role) {
+        $caps = [
+            'edit_posts',
+            'edit_pages',
+            'edit_others_posts',
+            'edit_others_pages',
+            'edit_published_posts',
+            'edit_published_pages',
+            'publish_posts',
+            'publish_pages',
+            'delete_posts',
+            'delete_pages'
+        ];
+        foreach ($caps as $cap) {
+            if ($role->has_cap($cap)) continue;
+
+            $role->add_cap($cap);
+        }
+    }
+}
+
+add_action('init', 'puf_add_country_editor_role');
+
 // Add languages field to user profile, editable only by administrators
 function puf_add_languages_field($user)
 {
