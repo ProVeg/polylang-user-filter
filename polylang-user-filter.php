@@ -94,16 +94,92 @@ function puf_save_user_languages($user_id)
 add_action('personal_options_update', 'puf_save_user_languages');
 add_action('edit_user_profile_update', 'puf_save_user_languages');
 
-function puf_is_site_admin(){
-    return in_array('administrator',  wp_get_current_user()->roles);
+function get_user_languages_or_all($args) {
+
+    if (current_user_can('administrator')) {
+        return true;
+    }
+
+    $current_user = wp_get_current_user();
+    $user_languages = get_user_meta($current_user->ID, 'user_languages', true);
+    if (isset($args['query'])) {
+        $query = $args['query'];
+        $post_type = $query->query['post_type'];
+        $is_main_query = $query->is_main_query();
+    }
+    if (isset($args['post_type'])) {
+        $post_type = $args['post_type'];
+        $is_main_query = true;
+    }
+
+    if (is_admin() && !empty($user_languages) && is_array($user_languages) && $is_main_query && (isset($post_type) && in_array($post_type, array('post', 'page', 'influencer')))) {
+        return $user_languages;
+    }
+
+    return true;
 }
+
+function render_veggie_challenge_language_limitations_meta_box_content($post, $args) 
+{
+    $user_languages = get_user_languages_or_all(array('post_type' => $post->post_type));
+    if ($user_languages !== true) {
+    ?>
+        <div>You can see the following languages: <?php echo implode(',', $user_languages) ?></div>
+        <script>
+            jQuery(document).ready(function() {// Array of allowed values
+                const allowedLanguages = ["<?php echo implode('","', $user_languages) ?>"];
+                
+                // Select the <select> element by its ID
+                jQuery("#post_lang_choice option").each(function () {
+                    // Check if the option's value is not in the allowedLanguages array
+                    if (!allowedLanguages.includes(jQuery(this).val())) {
+                        jQuery(this).remove(); // Remove the option
+                    }
+                });
+
+                jQuery("#post-translations table tr").each(function () {
+                    // Find the hidden input within the current row
+                    const hiddenInput = jQuery(this).find('input[type="hidden"]');
+
+                    if (hiddenInput.length > 0) {
+                        // Extract the language code from the name attribute (e.g., "post_tr_lang[nl]")
+                        const match = hiddenInput.attr("name").match(/\[(.+?)\]/);
+                        const languageCode = match ? match[1] : null;
+
+                        // If the language code is not in the allowed languages, remove the row
+                        if (!allowedLanguages.includes(languageCode)) {
+                            jQuery(this).remove();
+                        }
+                    }
+                });
+            });
+        </script>
+    <?php
+    } else {
+    ?>
+        <div>You can see all languages</div>
+    <?php
+    }
+}
+ 
+function add_veggie_challenge_language_limitations_meta_box( $post_type ) {
+
+    add_meta_box( 
+        'veggie_challenge_language_limitations'
+       ,'Veggie Challenge language limitations'
+       ,'render_veggie_challenge_language_limitations_meta_box_content'
+       ,null 
+       ,'side'
+       ,'high');
+}
+
+add_filter( 'add_meta_boxes', 'add_veggie_challenge_language_limitations_meta_box' );
 
 // Filter posts and pages by user's languages in the admin area
 function puf_filter_content_by_language($query)
 {
-    $current_user = wp_get_current_user();
-    $user_languages = get_user_meta($current_user->ID, 'user_languages', true);
-    if (is_admin() && !empty($user_languages) && is_array($user_languages) && $query->is_main_query() && (isset($query->query['post_type']) && in_array($query->query['post_type'], array('post', 'page')))) {
+    $user_languages = get_user_languages_or_all(array('query' => $query));
+    if ($user_languages !== true) {
         $tax_query = $query->get('tax_query') ?: array();
         $tax_query[] = array(
             'taxonomy' => 'language',
