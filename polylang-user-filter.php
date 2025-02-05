@@ -25,6 +25,8 @@ function puf_add_country_editor_role()
             'edit_published_pages',
             'publish_posts',
             'publish_pages',
+            'delete_published_posts',
+            'delete_other_posts',
             'delete_posts',
             'delete_pages'
         ];
