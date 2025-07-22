@@ -28,7 +28,8 @@ function puf_add_country_editor_role()
             'delete_published_posts',
             'delete_other_posts',
             'delete_posts',
-            'delete_pages'
+            'delete_pages',
+            'upload_files'
         ];
         foreach ($caps as $cap) {
             if ($role->has_cap($cap)) continue;
@@ -39,7 +40,6 @@ function puf_add_country_editor_role()
 }
 
 add_action('init', 'puf_add_country_editor_role');
-
 // Add languages field to user profile, editable only by administrators
 function puf_add_languages_field($user)
 {
@@ -193,3 +193,22 @@ function puf_filter_content_by_language($query)
 }
 
 add_action('pre_get_posts', 'puf_filter_content_by_language');
+
+add_action('admin_footer-edit.php', 'remove_language_column');
+
+function remove_language_column() {
+    global $typenow;
+
+    if (current_user_can('administrator')) {
+        return;
+    }
+
+    if ($typenow === 'page') {
+        ?>
+        <script>
+        // Your custom JS here
+        document.querySelectorAll("[class*='column-language_']").forEach(el => el.remove()); 
+        </script>
+        <?php
+    }
+}
