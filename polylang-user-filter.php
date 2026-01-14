@@ -23,12 +23,16 @@ function puf_add_country_editor_role()
             'edit_others_pages',
             'edit_published_posts',
             'edit_published_pages',
+            'edit_private_posts',
+            'edit_private_pages',
             'publish_posts',
             'publish_pages',
             'delete_published_posts',
             'delete_other_posts',
             'delete_posts',
             'delete_pages',
+            'delete_private_posts',
+            'delete_private_pages',
             'upload_files'
         ];
         foreach ($caps as $cap) {
